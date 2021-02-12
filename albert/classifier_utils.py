@@ -18,17 +18,21 @@ from __future__ import absolute_import
 from __future__ import division
 # from __future__ import google_type_annotations
 from __future__ import print_function
+
 import collections
 import csv
 import os
-from albert import fine_tuning_utils
-from albert import modeling
-from albert import optimization
-from albert import tokenization
+
 import tensorflow.compat.v1 as tf
 from tensorflow.contrib import data as contrib_data
 from tensorflow.contrib import metrics as contrib_metrics
 from tensorflow.contrib import tpu as contrib_tpu
+
+import data_handler
+from albert import fine_tuning_utils
+from albert import modeling
+from albert import optimization
+from albert import tokenization
 
 
 class InputExample(object):
@@ -124,6 +128,40 @@ class DataProcessor(object):
       return tokenization.preprocess_text(text, lower=self.do_lower_case)
     else:
       return tokenization.convert_to_unicode(text)
+
+
+class NluPreprocessor(DataProcessor):
+  def get_train_examples(self, data_dir):
+    """See base class."""
+    return self._create_examples(data_handler.load_json(os.path.join(data_dir, "train.json")), "train")
+
+  def get_dev_examples(self, data_dir):
+    """See base class."""
+    return self._create_examples(data_handler.load_json(os.path.join(data_dir, "dev.json")), "dev")
+
+  def get_test_examples(self, data_dir):
+    """See base class."""
+    return self._create_examples(data_handler.load_json(os.path.join(data_dir, "dev.json")), "test")
+
+  def get_labels(self):
+    """See base class."""
+    return ['AddToPlaylist', 'BookRestaurant', 'GetWeather', 'PlayMusic', 'RateBook', 'SearchCreativeWork',
+            'SearchScreeningEvent']
+
+  def _create_examples(self, lines, set_type):
+    """Creates examples for the training and dev sets."""
+    examples = []
+    for (i, line) in enumerate(lines):
+      if i == 0:
+        continue
+      guid = self.process_text(line)
+      text_a = self.process_text(lines[str(guid)]['text'])
+      if set_type == "test":
+        label = "test"
+      else:
+        label = self.process_text(line[str(guid)]['intent'])
+      examples.append(InputExample(guid=guid, text_a=text_a, label=label))
+    return examples
 
 
 class MnliProcessor(DataProcessor):
