@@ -1,6 +1,7 @@
 import json
 import os
 from json.decoder import JSONDecodeError
+from pprint import pprint
 
 
 def load_json(file):
@@ -58,10 +59,12 @@ def split_data(data, split_ratio):
 
 if __name__ == '__main__':
     train = load_json(os.path.join("data", "orig", "train.json"))
-    # class_labels = find_class_labels(train)
+    class_labels = find_class_labels(train)
     # slot_labels = find_slot_labels(train, class_labels)
-    # pprint(class_labels)
+    pprint(class_labels)
     # pprint(slot_labels)
-    train, dev = split_data(train, 0.8)
-    write_json(train, os.path.join("data", "train.json"))
-    write_json(train, os.path.join("data", "dev.json"))
+
+    # Train Test split
+    # train, dev = split_data(train, 0.8)
+    # write_json(train, os.path.join("data", "train.json"))
+    # write_json(train, os.path.join("data", "dev.json"))
